@@ -26,8 +26,9 @@ game_area = {
 
 games_per_batch = 200
 random_action_chance = 1
-min_random_action_chance = 0.05
-frames_before_min_random_action = 20000
+min_random_action_chance = 0.15
+delay_random_actions = 0.5 # don't start random actions until 50% of the last batch's average duration
+frames_before_min_random_action = 100000
 ideal_fps = 8
 ideal_frame_length = 1 / ideal_fps
 
@@ -38,9 +39,6 @@ actions = [
     {'name': 'duckKeyDown', 'doAction': lambda: keyboard.press(Key.down)},
     {'name': 'duckKeyUp', 'doAction': lambda: keyboard.release(Key.down)}
 ]
-#TODO: try using an RNN with stateful=True
-# https://machinelearningmastery.com/cnn-long-short-term-memory-networks/
-# https://stackoverflow.com/questions/43882796/when-does-keras-reset-an-lstm-state
 
 #Architecture based on Deep Mind https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26
 model = Sequential()
@@ -61,8 +59,9 @@ exp_replay = ExperienceReplay(model=model, max_memory=100000, discount=.9)
 exp_replay.load_memory()
 
 batch_i = 0
+last_batch_avg_duration = 0
 while 42:
-    total_batch_reward = 0
+    total_batch_duration = 0
     batch_i += 1
 
     #for some reason the character seems to move to the right over time so this resets it
@@ -98,7 +97,8 @@ while 42:
             input_prev = input
 
             # get next action
-            if np.random.rand() <= random_action_chance:
+            if time.time() - game_start_time > last_batch_avg_duration * delay_random_actions and \
+                    np.random.rand() <= random_action_chance:
                 action_i = np.random.randint(0, len(actions), size=1)[0]
                 #print(f'random: {actions[action_i]["name"]}')
             else:
@@ -130,7 +130,7 @@ while 42:
                 random_action_chance -= 1 / frames_before_min_random_action
                 random_action_chance = max(random_action_chance, min_random_action_chance)
 
-        total_batch_reward += time.time() - game_start_time
+        total_batch_duration += time.time() - game_start_time
 
         keyboard.release(Key.up)
         keyboard.release(Key.down)
@@ -141,4 +141,5 @@ while 42:
     model.save_weights(weights_file_path)
     exp_replay.save_memory()
 
-    print(f'Average time alive: {round(total_batch_reward / games_per_batch, 2)}s. Random factor: {round(random_action_chance, 3)}. Batch: {batch_i}.')
+    last_batch_avg_duration = total_batch_duration / games_per_batch
+    print(f'Average time alive: {round(last_batch_avg_duration, 2)}s. Random factor: {round(random_action_chance, 3)}. Batch: {batch_i}.')
