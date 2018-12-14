@@ -1,0 +1,8 @@
+Keras==2.1.2
+h5py==2.8.0
+numpy==1.14.0
+tensorflow==1.4.0
+image==1.5.27
+mss==3.3.2
+scikit-image==0.14.1
+pynput==1.4
