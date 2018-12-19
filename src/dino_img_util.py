@@ -2,6 +2,7 @@ import numpy as np
 from mss import mss
 #from mss.windows import MSS as mss
 from skimage.measure import block_reduce
+from PIL import Image
 
 class DinoImageUtil():
     def __init__(self):
@@ -21,8 +22,12 @@ class DinoImageUtil():
         img_np = block_reduce(img_np, block_size=(4, 4, 1), func=np.mean)
 
         # #show image
-        # from PIL import Image
         # img = Image.fromarray(np.uint8(img_np[:,:,0] * 255) , 'L')
         # img.show()
 
         return img_np
+
+
+    def save_screenshot(self, screenshot, filename):
+        img = Image.fromarray(np.uint8(screenshot[:,:,0] * 255) , 'L')
+        img.save(filename)

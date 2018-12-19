@@ -37,6 +37,5 @@ AI bot that learns to play the offline dinosaur game in Chrome.
  - Profile game loop. See how high the fps can go
  - Seem how many duplicate images are in the memory
  - Selectively prefer memories further from the start and ones close to the end of a run
- - Clean up code in dino_bot to make it easier to understand / more declarative
  - Unit test utility functions
  
