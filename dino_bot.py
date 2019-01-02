@@ -2,16 +2,17 @@ import time
 import os
 
 import numpy as np
-from keras.layers import Input, Conv2D, Flatten, Dense, concatenate
 
 from src.experience_replay import ExperienceReplay
 from src.game_environment import GameEnvironment
 from src.dino_img_util import DinoImageUtil
-from src.keras_util import connect_layers
+from src.window_mgr import ChromeWindowMgr
+import src.model_util as model_util
 
 from pycallgraph import PyCallGraph
 from pycallgraph.output import GraphvizOutput
 
+window_mgr = ChromeWindowMgr()
 img_util = DinoImageUtil()
 weights_file_path = 'data/model_weights.h5'
 monitor_id = 1
@@ -31,27 +32,13 @@ train_state = {
 
 game = GameEnvironment(monitor_id)
 
-#Architecture based on Deep Mind https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26
-labeled_data_input = Input(shape=(3,), name='labeledInput')
-model = connect_layers(
-    [
-        Input(shape=(38,150,1), name='imgInput'),
-        Conv2D(16, kernel_size=8, strides=4, activation='relu'),
-        Conv2D(32, kernel_size=4, strides=2, activation='relu'),
-        Flatten(),
-        lambda conv_output: concatenate([conv_output, labeled_data_input]),
-        Dense(256, activation='relu'),
-        Dense(len(game.actions), activation='relu')
-    ],
-    aux_inputs=[labeled_data_input])
-
-model.compile('adam', loss='mse')
-
-if not os.path.exists('data'):
-    os.makedirs('data')
-
-if os.path.isfile(weights_file_path):
-    model.load_weights(weights_file_path)
+model = model_util.get_model(
+    img_width=150,
+    img_height=38,
+    num_labeled_inputs=3,
+    num_actions=len(game.actions),
+    weights_file_path=weights_file_path
+)
 
 exp_replay = ExperienceReplay(model=model, max_memory=200000, discount=.9)
 exp_replay.load_memory()
@@ -63,6 +50,7 @@ def train():
         batch_i += 1
 
         for i in range(games_per_batch):
+            window_mgr.set_foreground()
             game.reload()
             game.start_and_sleep_until_ready()
 

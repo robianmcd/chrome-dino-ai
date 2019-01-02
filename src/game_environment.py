@@ -83,6 +83,11 @@ class GameEnvironment():
             game_over = False
             reward_instantaneous = 1
 
+        if game_over and time.time() - self.game_start_time < 0.3:
+            img_util.save_screenshot(self.last_screenshot, 'data/before_immediate_death.png')
+            img_util.save_screenshot(screenshot, 'data/after_immediate_death.png')
+            raise Exception('Died immediately after start')
+
         self.last_screenshot = screenshot
 
         return (screenshot, labeled_data, reward_instantaneous, game_over)
