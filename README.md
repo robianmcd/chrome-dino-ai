@@ -33,9 +33,8 @@ AI bot that learns to play the offline dinosaur game in Chrome.
  - Save/Load `random_action_chance` so you can kill the process and pickup where you left off
  - Add ability to train initial model on everything in the memory
  - Compress pixels to binary in the memory (need to use full size image instead of scaled down one so there is no anti-aliasing)
- - Focus on chrome window at the start of each run
  - Profile game loop. See how high the fps can go
- - Seem how many duplicate images are in the memory
- - Selectively prefer memories further from the start and ones close to the end of a run
+ - See how many duplicate images are in the memory
+ - Selectively prefer memories that are surprising to the model
  - Unit test utility functions
- 
+ - Move frame rate and timing into GameEnvironment

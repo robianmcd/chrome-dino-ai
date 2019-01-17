@@ -2,6 +2,7 @@ import os
 
 from keras.models import Model
 from keras.layers import Input, Conv2D, Flatten, Dense, concatenate
+from keras.optimizers import Adam
 
 def get_model(img_width, img_height, num_labeled_inputs, num_actions, weights_file_path=None):
     #Architecture based on Deep Mind https://becominghuman.ai/lets-build-an-atari-ai-part-1-dqn-df57e8ff3b26
@@ -14,11 +15,12 @@ def get_model(img_width, img_height, num_labeled_inputs, num_actions, weights_fi
             Flatten(),
             lambda conv_output: concatenate([conv_output, labeled_data_input]),
             Dense(256, activation='relu'),
-            Dense(num_actions, activation='relu')
+            Dense(num_actions)
         ],
-        aux_inputs=[labeled_data_input])
+        aux_inputs=[labeled_data_input]
+    )
 
-    model.compile('adam', loss='mse')
+    model.compile(Adam(lr=0.001), loss='mse')
 
     if weights_file_path:
         if not os.path.exists('data'):

@@ -1,4 +1,4 @@
-Keras==2.1.2
+Keras==2.2.4
 h5py==2.8.0
 numpy==1.14.0
 tensorflow==1.4.0
@@ -7,3 +7,4 @@ mss==3.3.2
 scikit-image==0.14.1
 pynput==1.4
 pycallgraph==1.0.1
+imageio==2.4.1

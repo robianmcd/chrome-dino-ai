@@ -11,7 +11,7 @@ class DinoImageUtil():
     def get_monitor_dimensions(self, monitorId=1):
         return self.sct.monitors[monitorId]
 
-    def get__processed_screenshot_np(self, area):
+    def get_processed_screenshot_np(self, area):
         img_sct = self.sct.grab(area)
         #Converting to numpy array returns RGBA value for each pixel. This: [:,:,0:1] just grabs the red channel
         img_np = np.array(img_sct)[:,:,0:1]
