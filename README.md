@@ -2,6 +2,8 @@
  
 AI bot that learns to play the offline dinosaur game in Chrome.
 
+![Network Visualization](network.gif "Network Visualization")
+
  # Install
  `pip install -r requirements.txt`
  
@@ -27,7 +29,8 @@ AI bot that learns to play the offline dinosaur game in Chrome.
 
  # TODOs / Experiments
  
-  - use an RNN with stateful=True
+ - Try DQN improvements outlined here https://medium.freecodecamp.org/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682
+ - use an RNN with stateful=True
    - https://machinelearningmastery.com/cnn-long-short-term-memory-networks/
    - https://stackoverflow.com/questions/43882796/when-does-keras-reset-an-lstm-state
  - Save/Load `random_action_chance` so you can kill the process and pickup where you left off

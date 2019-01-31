@@ -45,7 +45,7 @@ state = {
 
 def load_batch():
     state['batch_i'] = 0
-    state['batch'] = exp_replay.get_short_term_batch(num_frames_before_death=200, num_deaths=1)
+    state['batch'] = exp_replay.get_short_term_batch(num_frames_before_death=50, num_deaths=20)
 
 app = Flask(__name__, static_folder=static_folder)
 
@@ -58,45 +58,16 @@ def serve(path):
     else:
         return send_from_directory(static_folder, 'index.html')
 
-@app.route("/layers")
-def get_layers():
-    layer_summaries = []
-    for layer in model.layers:
+@app.route("/model")
+def get_model():
+    model_config = model.get_config()
 
-        inbound_layer_names = []
-        if hasattr(layer, 'inbound_nodes'):
-            for node in layer.inbound_nodes:
-                for inbound_layer in node.inbound_layers:
-                    inbound_layer_names.append(inbound_layer.name)
+    for layer_config in model_config['layers']:
+        layer = model.get_layer(layer_config['name'])
+        #Need to convert everything to int as it can be np.int32 which is not json serializable
+        layer_config['outputShape'] = [int(x) for x in layer.output_shape[1:]]
 
-        outbound_layer_names = []
-        if hasattr(layer, 'outbound_nodes'):
-            for node in layer.outbound_nodes:
-                outbound_layer_names.append(node.outbound_layer.name)
-
-        layer_summary = {
-            'name': layer.name,
-            'type': type(layer).__name__,
-            'inboundLayerNames': inbound_layer_names,
-            'outboundLayerNames': outbound_layer_names,
-            #Remove the batch size from the output shape with layer.output_shape[1:]
-            #Need to convert everything to int as it can be np.int32 which is not json serializable
-            'outputShape': [int(x) for x in layer.output_shape[1:]],
-        }
-
-        if hasattr(layer, 'activation'):
-            layer_summary['activation'] = type(layer.activation).__name__
-
-        if isinstance(layer, Conv2D):
-            layer_summary['Conv2D'] = {
-                'filters': layer.filters,
-                'kernel_size': layer.kernel_size,
-                'strides': layer.strides
-            }
-
-        layer_summaries.append(layer_summary)
-
-    return jsonify(layer_summaries)
+    return jsonify(model_config)
 
 @app.route("/predict")
 def predict():

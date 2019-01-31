@@ -7,169 +7,37 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div id="app">
+        <chrome-dino-app></chrome-dino-app>
+    </div>
+
+    <!--3rd Party Libraries-->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <!--Vue Services-->
+    <script src="services/api.js"></script>
+    <script src="services/model-store.js"></script>
+    <script src="services/d3-controller.js"></script>
+
+    <!--Vue Mixins-->
+    <script src="mixins/layer-renderer-1d.mixin.js"></script>
+    <script src="mixins/layer-renderer-2d.mixin.js"></script>
+
+    <!--Vue Components-->
+    <script src="components/chrome-dino-app.comp.js"></script>
+    <script src="components/layer/generic-layer.comp.js"></script>
+    <script src="components/layer/input-layer.comp.js"></script>
+    <script src="components/layer/dense-layer.comp.js"></script>
+    <script src="components/layer/flatten-layer.comp.js"></script>
+    <script src="components/layer/concatenate-layer.comp.js"></script>
+    <script src="components/layer/conv-2d-layer.comp.js"></script>
 
     <script>
-        pointSize = 4
-        pointArea = pointSize**2
-
-        function imageBuffersFromChannelArray(channelArray) {
-            height = channelArray.length
-            width = channelArray[0].length
-            numChannels = channelArray[0][0].length
-
-            imgBuffers = []
-
-            for(let channel = 0; channel < numChannels; channel++) {
-                buffer = new Uint8ClampedArray(width * height * pointArea * 4)
-
-                //Based on https://stackoverflow.com/questions/22823752/creating-image-from-array-in-javascript-and-html5
-                for(let x = 0; x < width; x++) {
-                    for(let y = 0; y < height; y++) {
-
-                        for (let innerPointXOffset = 0; innerPointXOffset < pointSize; innerPointXOffset++) {
-                            for (let innerPointYOffset = 0; innerPointYOffset < pointSize; innerPointYOffset++) {
-                                pixelRow = y * pointSize + innerPointYOffset
-                                pixelCol = x * pointSize + innerPointXOffset
-                                pixelOffset = (pixelRow * width * pointSize + pixelCol) * 4
-                                greyscaleValue = channelArray[y][x][channel] * 255
-
-                                buffer[pixelOffset] = greyscaleValue; // Red
-                                buffer[pixelOffset + 1] = greyscaleValue; // Green
-                                buffer[pixelOffset + 2] = greyscaleValue; // Blue
-                                buffer[pixelOffset + 3] = 255; // Alpha
-                            }
-                        }
-
-                    }
-                }
-
-                imgBuffers.push(buffer)
-            }
-
-            return imgBuffers
-        }
-
-        function drawImgBuffers(layer, outputs, buffers) {
-            let height = outputs.length;
-            let width = outputs[0].length;
-            let channels = outputs[0][0].length;
-
-            for(let channel = 0; channel < channels; channel++) {
-                // create off-screen canvas element
-                let canvas = getCanvasByName(layer.name + '-canvas-' + channel);
-                canvas.style = 'border: 1px solid black';
-                let ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                canvas.width = width * pointSize;
-                canvas.height = height * pointSize;
-
-                // create imageData object
-                var imageData = ctx.createImageData(width * pointSize, height * pointSize);
-
-                // set our buffer as source
-                imageData.data.set(buffers[channel]);
-
-                // update canvas with new data
-                ctx.imageSmoothingEnabled = false;
-                ctx.putImageData(imageData, 0, 0);
-            }
-        }
-
-        function draw1DLayer(layer, outputs) {
-            nodeWidth = 10;
-            nodeHeight = 10;
-            borderMargin = 2;
-            containerWidth = document.documentElement.clientWidth - 40;
-            nodesPerRow = Math.floor(containerWidth / nodeWidth) - 1;
-            numRows = Math.ceil(outputs.length / nodesPerRow)
-
-
-            let canvas = getCanvasByName(layer.name + '-canvas');
-            let ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            canvas.width = (nodesPerRow + 1) * nodeWidth;
-            canvas.height = numRows*nodeHeight;
-
-            maxOutput = Math.max(...outputs);
-
-            outputs.forEach((output, i) => {
-                row = Math.floor(i / nodesPerRow)
-                iInRow = i % nodesPerRow
-                rowXOffset = row % 2 === 1 ? nodeWidth/2 : 0
-
-                var radiusX = (nodeWidth - borderMargin) / 2;
-                var radiusY = (nodeHeight - borderMargin) / 2;
-                var centerX = rowXOffset + iInRow * nodeWidth + nodeWidth / 2;
-                var centerY = row * nodeHeight + nodeHeight / 2;
-
-                outputPercent = Math.round(output/Math.max(1, maxOutput) * 100)
-
-                ctx.beginPath();
-                ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI)
-
-
-                //ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-                ctx.fillStyle = `hsl(200,80%,${100 - outputPercent/2}%)`;
-                ctx.fill();
-                ctx.lineWidth = 0.7;
-                ctx.strokeStyle = '#000000';
-                ctx.stroke();
-            });
-        }
-
-        function getCanvasByName(name) {
-            let canvas = document.getElementById(name);
-            if (!canvas) {
-                canvas = document.createElement('canvas');
-                canvas.id = name
-                document.body.appendChild(canvas);
-            }
-
-            return canvas;
-        }
-
-        let layers = undefined;
-
-        fetch('/layers')
-            .then(r => r.json())
-            .then(_layers => {
-                layers = _layers
-            })
-            .then(() => {
-                let getNext = () => {
-                    return fetch('/predict')
-                        .then(r => r.json())
-                        .then(layer_outputs => {
-                            layers.forEach(layer => {
-                                layer_output = layer_outputs[layer.name];
-                                if (layer.type == 'Conv2D' ||
-                                    (layer.type == 'InputLayer' && layer.outputShape.length === 3))
-                                {
-                                    buffers = imageBuffersFromChannelArray(layer_output);
-                                    drawImgBuffers(layer, layer_output, buffers);
-                                } else if (layer.outputShape.length === 1) {
-                                    draw1DLayer(layer, layer_output);
-                                }
-
-                                //LOLZ
-                                if(document.body.children[document.body.children.length - 1].tagName !== 'BR') {
-                                    document.body.appendChild(document.createElement('br'));
-                                }
-
-                            })
-
-                        })
-                        .then(() => {
-                            //setTimeout(() => getNext(), 100);
-                        })
-                };
-
-                getNext();
-
-            })
-
+        new Vue({
+            el: '#app'
+        });
     </script>
+
 </body>
 </html>
