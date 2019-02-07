@@ -31,6 +31,7 @@ layer_names = [layer.name for layer in model.layers]
 
 layer_outputs = [layer.output for layer in model.layers if not isinstance(layer, InputLayer)]
 wrappedModel = Model(inputs=model.inputs, outputs=layer_outputs)
+wrappedModel._make_predict_function()
 
 exp_replay = ExperienceReplay(model=model, max_memory=200000, discount=.9)
 exp_replay.load_memory()
