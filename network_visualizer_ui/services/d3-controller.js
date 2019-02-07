@@ -22,9 +22,10 @@
             let simulation = d3.forceSimulation(nodes)
                 .force('customForce', this._getCustomForce(nodes));
 
-            //For some reason creating the simulation messes with each node's x value even if there aren't any forces so
-            //this resets them all.
-            nodes.forEach(n => n.x = 0);
+            //space out nodes so they are not initially overlapping
+            modelStore.rowLayout.forEach(row => {
+                row.forEach((n, i) => n.x = this.nodeWidth * i);
+            });
 
             let d3NodeSelector = d3ContainerSelector.selectAll(layerSelector)
                 .data(nodes, function(d) {return d ? d.id : this.id})
@@ -51,7 +52,7 @@
         // https://codepen.io/robianmcd/pen/qgZJmy
         _getCustomForce(nodes) {
             return (alpha) => {
-                nodes.forEach((node, i) => {
+                nodes.forEach(node => {
                     let linkedNodes = [...node.inboundLayerNames, ...node.outboundLayerNames]
                         .map(name => modelStore.layerMap.get(name));
 
@@ -64,19 +65,34 @@
                         }, 0);
 
                     let directionMult = totalSquaredOffset > 0 ? 1 : -1;
-                    node.vx += Math.sqrt(Math.abs(totalSquaredOffset)) * directionMult * alpha / 2;
+                    node.vx += Math.sqrt(Math.abs(totalSquaredOffset)) * directionMult * alpha;
+                });
 
+                nodes.forEach((node, i) => {
                     nodes
                         .filter(n => n.row === node.row && n.id !== node.id)
                         .forEach((sameRowNode) => {
-                            if (sameRowNode.x === node.x) {
+                            let sameRowNextX = sameRowNode.x + sameRowNode.vx;
+                            let nextX = node.x + node.vx;
+
+                            if (sameRowNextX === nextX) {
                                 let directionMult = (i < sameRowNode.index) ? -1 : 1;
                                 node.vx = this.nodeWidth / 2 * directionMult * alpha;
-                            } else if(sameRowNode.x > node.x && sameRowNode.x <= node.x + this.nodeWidth ||
-                                node.x > sameRowNode.x && node.x <= sameRowNode.x + this.nodeWidth)
+                            } else if(sameRowNextX > nextX && sameRowNextX < nextX + this.nodeWidth ||
+                                nextX > sameRowNextX && nextX < sameRowNextX + this.nodeWidth)
                             {
-                                let directionMult = node.x > sameRowNode.x ? 1 : -1;
-                                node.vx += (this.nodeWidth - Math.abs(node.x - sameRowNode.x)) * directionMult * Math.sqrt(alpha);
+                                let nodeVx = node.vx;
+                                node.vx = sameRowNode.vx / 10;
+                                sameRowNode.vx = nodeVx / 10;
+
+                                let midPoint = (nextX + sameRowNextX + this.nodeWidth) / 2;
+                                if (nextX < sameRowNextX) {
+                                    node.x = midPoint - this.nodeWidth;
+                                    sameRowNode.x = midPoint;
+                                } else {
+                                    node.x = midPoint - this.nodeWidth;
+                                    sameRowNode.x = midPoint;
+                                }
                             }
                         });
 
