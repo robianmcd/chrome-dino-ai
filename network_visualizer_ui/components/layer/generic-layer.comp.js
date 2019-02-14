@@ -15,12 +15,13 @@
 
     Vue.component('generic-layer', {
         template,
-        mixins: [window.LayerRenderer1DMixin, window.LayerRenderer2DMixin],
-        props: ['layer', 'layerOutput'],
+        mixins: [
+            window.LayerMixin,
+            window.LayerRenderer1DMixin,
+            window.LayerRenderer2DMixin
+        ],
         methods: {
-            render: function() {
-                console.log('rendering')
-            }
+
         }
     });
 

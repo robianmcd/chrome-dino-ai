@@ -1,5 +1,4 @@
 (function(){
-
     let template = `
 <div class="input-layer">
     <div class="layer__info">
@@ -19,15 +18,13 @@
 
     Vue.component('dense-layer', {
         template,
-        mixins: [window.LayerRenderer1DMixin],
-        props: ['layer', 'layerOutput'],
+        mixins: [
+            window.LayerMixin,
+            window.LayerRenderer1DMixin,
+            window.FullyConnectedEdgeRendererMixin
+        ],
         methods: {
 
-        },
-        watch: {
-            layerOutput: function() {
-                this.render1D(this.layerOutput, this.$refs['node_container']);
-            }
         }
     });
 

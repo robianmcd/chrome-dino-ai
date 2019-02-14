@@ -15,15 +15,13 @@
 
     Vue.component('concatenate-layer', {
         template,
-        mixins: [window.LayerRenderer1DMixin],
-        props: ['layer', 'layerOutput'],
+        mixins: [
+            window.LayerMixin,
+            window.LayerRenderer1DMixin,
+            window.OneToOneEdgeRendererMixin
+        ],
         methods: {
 
-        },
-        watch: {
-            layerOutput: function() {
-                this.render1D(this.layerOutput, this.$refs['node_container']);
-            }
         }
     });
 

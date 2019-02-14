@@ -1,4 +1,5 @@
 (function(){
+    let modelStore = window.modelStore;
 
     let template = `
 <div class="input-layer">
@@ -15,14 +16,43 @@
 
     Vue.component('flatten-layer', {
         template,
-        mixins: [window.LayerRenderer1DMixin],
-        props: ['layer', 'layerOutput'],
+        mixins: [
+            window.LayerMixin,
+            window.LayerRenderer1DMixin,
+            window.OneToOneEdgeRendererMixin
+        ],
         methods: {
+            onLayerOutputChange() {
+                let layerOutput;
+                let inputLayer = modelStore.layerMap.get(this.layer.inboundLayerNames[0]);
+                let inputShape = inputLayer.outputShape;
 
-        },
-        watch: {
-            layerOutput: function() {
-                this.render1D(this.layerOutput, this.$refs['node_container']);
+                if(inputShape.length === 3) {
+                    layerOutput = [];
+                    let inputHeight = inputShape[0];
+                    let inputWidth = inputShape[1];
+                    //Assumes Tensorflow channel last order
+                    let numChannels = inputShape[2];
+
+                    //Reorder the outputs so that channel comes first instead of last to improve the visualization.
+                    this.layerOutput
+                        .forEach((output, index) => {
+                            let channel = index % numChannels;
+                            index = Math.floor(index / numChannels);
+                            let x = index % inputWidth;
+                            index = Math.floor(index / inputWidth);
+                            let y = index;
+
+                            let sortedIndex = x + y*inputWidth + channel*inputHeight*inputWidth;
+
+                            layerOutput[sortedIndex] = output;
+                        });
+
+                } else {
+                    layerOutput = this.layerOutput;
+                }
+
+                this.render(layerOutput, this.$refs['node_container']);
             }
         }
     });

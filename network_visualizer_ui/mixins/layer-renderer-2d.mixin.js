@@ -7,13 +7,14 @@
         if (!canvas) {
             canvas = document.createElement('canvas');
             canvas.id = name;
+            canvas.className = 'layer__canvas-2d';
             nodeContainerElem.appendChild(canvas);
         }
 
         return canvas;
     }
 
-    function imageBuffersFromChannelArray(channelArray) {
+    function imageBuffersFromChannelArray(channelArray, pixelPositions) {
         height = channelArray.length;
         width = channelArray[0].length;
         numChannels = channelArray[0][0].length;
@@ -24,8 +25,11 @@
             buffer = new Uint8ClampedArray(width * height * pointArea * 4);
 
             //Based on https://stackoverflow.com/questions/22823752/creating-image-from-array-in-javascript-and-html5
-            for(let x = 0; x < width; x++) {
-                for(let y = 0; y < height; y++) {
+            for(let y = 0; y < height; y++) {
+                for(let x = 0; x < width; x++) {
+                    // let pixelIndex = channel + x * numChannels + y * numChannels * width;
+                    // pixelPositions[pixelIndex] = {x: x*pointSize, y: y*pointSize, channel: channel};
+                    pixelPositions.push({x: x*pointSize, y: y*pointSize, channel: channel});
 
                     for (let innerPointXOffset = 0; innerPointXOffset < pointSize; innerPointXOffset++) {
                         for (let innerPointYOffset = 0; innerPointYOffset < pointSize; innerPointYOffset++) {
@@ -50,22 +54,31 @@
         return imgBuffers
     }
 
-    window.LayerRenderer2DMixin = Vue.mixin({
+    window.LayerRenderer2DMixin = {
+        data: function() {
+            return {
+                layerRenderer2DPixelPositions: [],
+                layerRenderer2DNodeElems: []
+            };
+        },
         methods: {
             render2D: function (outputs, nodeContainerElem) {
-                let buffers = imageBuffersFromChannelArray(outputs);
+                this.layerRenderer2DNodeElems = [];
+                this.layerRenderer2DPixelPositions = [];
+
+                let buffers = imageBuffersFromChannelArray(outputs, this.layerRenderer2DPixelPositions);
 
                 let height = outputs.length;
                 let width = outputs[0].length;
                 let channels = outputs[0][0].length;
 
-                let maxChannels = 300;
+                let maxChannels = 7;
                 channels = Math.min(channels, maxChannels);
 
                 for(let channel = 0; channel < channels; channel++) {
                     // create off-screen canvas element
                     let canvas = getCanvasByName(nodeContainerElem, 'canvas-' + channel);
-                    canvas.style = 'border: 1px solid black';
+                    canvas.style = 'border: 1px solid #838383';
                     let ctx = canvas.getContext('2d');
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -81,9 +94,33 @@
                     // update canvas with new data
                     ctx.imageSmoothingEnabled = false;
                     ctx.putImageData(imageData, 0, 0);
+
+                    this.layerRenderer2DNodeElems.push(canvas);
+
                 }
+            },
+            get2DNodePositions: function() {
+                return this.layerRenderer2DNodeElems.map(nodeCanvas => {
+                    let canvasRect = nodeCanvas.getBoundingClientRect();
+                    return {
+                        x: canvasRect.left + document.documentElement.scrollLeft + canvasRect.width/2,
+                        y: canvasRect.top + document.documentElement.scrollTop + canvasRect.height/2
+                    };
+                });
+
+            },
+            get1DNodePositions: function() {
+                return this.layerRenderer2DPixelPositions
+                    .filter(pixelPos => pixelPos.channel < this.layerRenderer2DNodeElems.length)
+                    .map(pixelPos => {
+                        let canvasRect = this.layerRenderer2DNodeElems[pixelPos.channel].getBoundingClientRect();
+                        return {
+                            x: canvasRect.left + pixelPos.x + document.documentElement.scrollLeft + pointSize/2,
+                            y: canvasRect.top + pixelPos.y + document.documentElement.scrollTop + pointSize/2
+                        };
+                    });
             }
         }
-    });
+    };
 
 })();

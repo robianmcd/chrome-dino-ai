@@ -15,20 +15,13 @@
 
     Vue.component('input-layer', {
         template,
-        mixins: [window.LayerRenderer1DMixin, window.LayerRenderer2DMixin],
-        props: ['layer', 'layerOutput'],
+        mixins: [
+            window.LayerMixin,
+            window.LayerRenderer2DMixin,
+            window.LayerRenderer1DMixin
+        ],
         methods: {
 
-        },
-        watch: {
-            layerOutput: function() {
-                if(this.layer.outputShape.length === 1) {
-                    this.render1D(this.layerOutput, this.$refs['node_container']);
-                } else if (this.layer.outputShape.length === 3) {
-                    this.render2D(this.layerOutput, this.$refs['node_container']);
-                }
-
-            }
         }
     });
 
