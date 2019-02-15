@@ -44,13 +44,11 @@ AI bot that learns to play the offline dinosaur game in Chrome.
  
 **Network visualizer**
  - Dynamic layer width
- - elipse for 2D nodes
- - Dynamically set pixel size based on image size/count
- - expand/colapse nodes. Maybe use different edge rendering technique when expanded 
  - Make pip package
  - test with other networks
  - support common layers. e.g. activation, max pooling, dropout?
  - Add buttons for play/pause/next
+ - expand/colapse nodes. Maybe use different edge rendering technique when expanded 
  
 **Network visualizer nice to have**
  - Show edge weights / show edge outputs
