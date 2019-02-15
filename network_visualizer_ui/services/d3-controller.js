@@ -59,7 +59,7 @@
 
                     let totalSquaredOffset = linkedNodes
                         .reduce((offsetAgg, linkedNode) => {
-                            let horizDist = linkedNode.x - node.x;
+                            let horizDist = (linkedNode.x + this._nodeWidth(linkedNode)/2) - (node.x + this._nodeWidth(node)/2);
 
                             return offsetAgg + horizDist * Math.abs(horizDist);
                         }, 0);
@@ -77,21 +77,23 @@
 
                             if (sameRowNextX === nextX) {
                                 let directionMult = (i < sameRowNode.index) ? -1 : 1;
-                                node.vx = this.nodeWidth / 2 * directionMult * alpha;
-                            } else if(sameRowNextX > nextX && sameRowNextX < nextX + this.nodeWidth ||
-                                nextX > sameRowNextX && nextX < sameRowNextX + this.nodeWidth)
+                                node.vx = this._nodeWidth(node) / 2 * directionMult * alpha;
+                            } else if(sameRowNextX > nextX && sameRowNextX < nextX + this._nodeWidth(node) ||
+                                nextX > sameRowNextX && nextX < sameRowNextX + this._nodeWidth(sameRowNode))
                             {
                                 let nodeVx = node.vx;
                                 node.vx = sameRowNode.vx / 10;
                                 sameRowNode.vx = nodeVx / 10;
 
-                                let midPoint = (nextX + sameRowNextX + this.nodeWidth) / 2;
+                                // let midPoint = (nextX + sameRowNextX + this._nodeWidthnode) / 2;
                                 if (nextX < sameRowNextX) {
-                                    node.x = midPoint - this.nodeWidth;
+                                    let midPoint = (sameRowNextX + nextX + this._nodeWidth(node)) / 2;
+                                    node.x = midPoint - this._nodeWidth(node);
                                     sameRowNode.x = midPoint;
                                 } else {
-                                    node.x = midPoint - this.nodeWidth;
-                                    sameRowNode.x = midPoint;
+                                    let midPoint = (nextX + sameRowNextX + this._nodeWidth(sameRowNode)) / 2;
+                                    node.x = midPoint;
+                                    sameRowNode.x = midPoint - this._nodeWidth(sameRowNode);
                                 }
                             }
                         });
@@ -99,6 +101,11 @@
                 });
 
             };
+        }
+
+        _nodeWidth(node) {
+            let padding = 10;
+            return node.comp.$el.clientWidth + padding;
         }
     }
 

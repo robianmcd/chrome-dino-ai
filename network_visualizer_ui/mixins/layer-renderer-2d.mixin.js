@@ -71,6 +71,7 @@
             render2D: function (outputs, nodeContainerElem) {
                 this.layerRenderer2DNodeElems = [];
                 this.layerRenderer2DPixelPositions = [];
+                nodeContainerElem.style.width = '478px';
 
                 let containerComputedStyle = getComputedStyle(nodeContainerElem);
                 let containerPadding = parseFloat(containerComputedStyle.paddingLeft) + parseFloat(containerComputedStyle.paddingRight);

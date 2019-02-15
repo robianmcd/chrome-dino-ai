@@ -92,6 +92,7 @@
                 let containerPadding = parseFloat(containerComputedStyle.paddingLeft) + parseFloat(containerComputedStyle.paddingRight);
 
                 let containerWidth = nodeContainerElem.clientWidth - containerPadding;
+                containerWidth = Math.min(455, (outputs.length + 1) * nodeWidth);
                 let nodesPerRow = Math.floor(containerWidth / nodeWidth) - 1;
                 let numRows = Math.ceil(outputs.length / nodesPerRow);
 

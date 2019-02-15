@@ -36,11 +36,17 @@
             modelStore.load_model()
                 .then(() => {
                     this.rowLayout = modelStore.rowLayout;
+                })
+                .then(() => this.getNextOutput())
+                .then(() => {
                     setTimeout(() => {
                         d3Controller.applyToContainer('.chrome-dino-app', '.app__layer');
+
+                            modelStore.model.layers.forEach(layer => {
+                                layer.comp && layer.comp.drawEdges && layer.comp.drawEdges();
+                            });
                     });
-                })
-                .then(() => this.getNextOutput());
+                });
         },
         methods: {
             getLayerCompName: function (layer) {
@@ -55,13 +61,13 @@
                 return api.getLayerOutputs()
                     .then((layerOutputs => {
                         this.layerOutputs = layerOutputs;
-                        setTimeout(() => this.getNextOutput(), 125);
+                        // setTimeout(() => this.getNextOutput(), 125);
                         setTimeout(() => {
                             this.resizeRows();
 
-                            modelStore.model.layers.forEach(layer => {
-                                layer.comp && layer.comp.drawEdges && layer.comp.drawEdges();
-                            });
+                            // modelStore.model.layers.forEach(layer => {
+                            //     layer.comp && layer.comp.drawEdges && layer.comp.drawEdges();
+                            // });
 
                         });
                     }));

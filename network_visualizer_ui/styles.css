@@ -36,7 +36,6 @@ body {
 
 .app__layer {
     position: absolute;
-    width: 650px;
     display: flex;
     border-radius: 5px;
     border: 1px solid #222;
@@ -44,7 +43,8 @@ body {
 }
 
 .layer__info {
-    flex: 0 0 170px;
+    /*flex: 0 0 170px;*/
+    width: 170px;
     background-color: #f2f2f2;
     padding: 10px;
     border-top-left-radius: 5px;
@@ -77,6 +77,7 @@ body {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    /*width: 478px;*/
 }
 
 .layer__nodes canvas {
