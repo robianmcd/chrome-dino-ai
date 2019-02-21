@@ -30,17 +30,15 @@
         data: () => ({
             model: undefined,
             rowLayout: undefined,
-            layerOutputs: undefined
+            layerOutputs: undefined,
+            firstUpdate: true
         }),
         created: function () {
             modelStore.load_model()
                 .then(() => {
                     this.rowLayout = modelStore.rowLayout;
-                    setTimeout(() => {
-                        d3Controller.applyToContainer('.chrome-dino-app', '.app__layer');
-                    });
                 })
-                .then(() => this.getNextOutput());
+                .then(() => this.getNextOutput())
         },
         methods: {
             getLayerCompName: function (layer) {
@@ -52,19 +50,45 @@
             },
 
             getNextOutput() {
-                return api.getLayerOutputs()
+                let getNextOutputPromise = api.getLayerOutputs()
                     .then((layerOutputs => {
                         this.layerOutputs = layerOutputs;
-                        setTimeout(() => this.getNextOutput(), 125);
-                        setTimeout(() => {
+                    }));
+
+
+                if(this.firstUpdate) {
+                    getNextOutputPromise = getNextOutputPromise
+                        //Wait for vue to call layoutOut watch hooks which will call render for each layer.
+                        .then(() => {
+                            return new Promise((resolve) => {
+                                setTimeout(resolve);
+                            });
+                        })
+                        .then(() => {
+                            d3Controller.applyToContainer('.chrome-dino-app', '.app__layer');
+                        })
+                        //Let DOM update with element positions from d3
+                        .then(() => {
+                            return new Promise((resolve) => {
+                                d3.timeout(resolve);
+                            });
+                        })
+                        .then(() => {
                             this.resizeRows();
 
                             modelStore.model.layers.forEach(layer => {
                                 layer.comp && layer.comp.drawEdges && layer.comp.drawEdges();
                             });
 
+                            this.firstUpdate = false;
                         });
-                    }));
+                }
+
+                getNextOutputPromise.then(() => {
+                    // setTimeout(() => this.getNextOutput(),150);
+                });
+
+                return getNextOutputPromise;
             },
 
             resizeRows: function() {

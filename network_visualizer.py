@@ -20,6 +20,7 @@ model = model_util.get_model(
     num_actions=len(game.actions),
     weights_file_path='data/model_weights.h5'
 )
+model._make_predict_function()
 
 layer_metadata = {
     'dense_2': {

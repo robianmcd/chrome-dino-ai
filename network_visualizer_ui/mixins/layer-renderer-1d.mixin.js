@@ -7,6 +7,7 @@
     let radiusX = (nodeWidth - borderMargin) / 2;
     let radiusY = (nodeHeight - borderMargin) / 2;
     let nodesPerElipse = 3;
+    let canvasMaxWidth = 458;
 
     function getCanvas(nodeContainerElem) {
         let canvas = nodeContainerElem.querySelector('#layerCanvas1D');
@@ -88,11 +89,8 @@
         },
         methods: {
             render1D: function(outputs, nodeContainerElem, truncate=true, normalize=true) {
-                let containerComputedStyle = getComputedStyle(nodeContainerElem);
-                let containerPadding = parseFloat(containerComputedStyle.paddingLeft) + parseFloat(containerComputedStyle.paddingRight);
-
-                let containerWidth = nodeContainerElem.clientWidth - containerPadding;
-                let nodesPerRow = Math.floor(containerWidth / nodeWidth) - 1;
+                let canvasWidth = Math.min(canvasMaxWidth, (outputs.length + 1) * nodeWidth);
+                let nodesPerRow = Math.floor(canvasWidth / nodeWidth) - 1;
                 let numRows = Math.ceil(outputs.length / nodesPerRow);
 
                 let canvas = getCanvas(nodeContainerElem);
@@ -100,7 +98,7 @@
                 let ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                canvas.width = containerWidth;
+                canvas.width = canvasWidth;
                 canvas.height = truncate ? nodeHeight : numRows*nodeHeight;
 
                 if(normalize) {

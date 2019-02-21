@@ -72,6 +72,10 @@
                 this.layerRenderer2DNodeElems = [];
                 this.layerRenderer2DPixelPositions = [];
 
+                //This results in a 650px wide layer. Info panel is 170px and layer border is 2px which leave 478px for
+                // the layer nodes.
+                nodeContainerElem.style.width = '478px';
+
                 let containerComputedStyle = getComputedStyle(nodeContainerElem);
                 let containerPadding = parseFloat(containerComputedStyle.paddingLeft) + parseFloat(containerComputedStyle.paddingRight);
                 let containerWidth = nodeContainerElem.clientWidth - containerPadding;
